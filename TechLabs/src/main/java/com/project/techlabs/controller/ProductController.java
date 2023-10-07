@@ -3,6 +3,7 @@ package com.project.techlabs.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.techlabs.dto.ProductDTO;
+import com.project.techlabs.dto.ProductData;
 import com.project.techlabs.service.CsvReaderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,9 +26,9 @@ public class ProductController {
     private ObjectMapper objectMapper = new ObjectMapper();
 //    private ProductService productService;
 
-    @GetMapping("/rec/{id}")
-    public ResponseEntity<String> getProductId(@PathVariable("id") Optional<List<String>> productIds) throws Exception {
-        List<String> result = null;
+    @GetMapping("/rec")
+    public ResponseEntity<String> getProductId(@RequestParam("id") Optional<List<String>> productIds) throws Exception {
+        ProductData result = null;
         System.out.println(productIds);
 
         if (productIds.isPresent()) {
