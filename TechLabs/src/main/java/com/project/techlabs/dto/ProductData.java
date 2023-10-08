@@ -9,6 +9,6 @@ import java.util.List;
 @Getter
 @Setter
 public class ProductData {
-    private List<ProductDTO> target = new ArrayList<>();
+    private ProductDTO target;
     private List<ProductResultDTO> results = new ArrayList<>();
 }
