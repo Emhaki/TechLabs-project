@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,21 +29,24 @@ public class ProductController {
 //    private ProductService productService;
 
     @GetMapping("/rec")
-    public ResponseEntity<String> getProductId(@RequestParam("id") Optional<List<String>> productIds) throws Exception {
+    public ResponseEntity<List<String>> getProductId(@RequestParam("id") Optional<List<String>> productIds) throws Exception {
         ProductData result = null;
-        System.out.println(productIds);
+        List<String> resultData = new ArrayList<>();
 
         if (productIds.isPresent()) {
             try {
-                result = csvReaderService.readCsvByProductId(productIds);
-                String json = objectMapper.writeValueAsString(result);
-                System.out.println(json);
-                return ResponseEntity.ok(json);
+                for (String id : productIds.orElse(Collections.emptyList())) {
+
+                    result = csvReaderService.readCsvByProductId(id);
+                    String json = objectMapper.writeValueAsString(result);
+                    resultData.add(json.replace("\\", ""));
+                }
+                return ResponseEntity.ok(resultData);
             } catch (JsonProcessingException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error Response");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonList("Error Response"));
             }
         } else {
-            return ResponseEntity.badRequest().body("Not Found Product Id");
+            return ResponseEntity.badRequest().body(Collections.singletonList("Not Found Product Id"));
         }
     }
 }
