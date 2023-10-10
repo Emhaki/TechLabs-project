@@ -46,16 +46,24 @@ public class ProductController {
     }
 
     @PostMapping("/rec/insert")
-    public ResponseEntity<String> insertCsvData(@RequestParam Map<String, Object> pramMap) throws Exception {
-        csvReaderService.insertCsvData(pramMap);
+    public ResponseEntity<String> insertCsvData(@RequestParam Map<String, Object> paramMap) throws Exception {
+        csvReaderService.insertCsvData(paramMap);
 
         return ResponseEntity.ok("Success");
     }
 
     @PostMapping("/rec/update")
-    public ResponseEntity<String> updateCsvData(@RequestParam Map<String, Object> pramMap) throws Exception {
-        csvReaderService.updateCsvData(pramMap);
+    public ResponseEntity<String> updateCsvData(@RequestParam Map<String, Object> paramMap) throws Exception {
+        csvReaderService.updateCsvData(paramMap);
 
         return ResponseEntity.ok("Success");
     }
-}
+
+    @PostMapping("/rec/delete")
+    public ResponseEntity<String> deleteCsvData(@RequestParam("search_product_id") String searchProductId,
+                                                @RequestParam("kind_of_file_name") String kindOfFileName) throws Exception {
+        csvReaderService.deleteCsvData(searchProductId, kindOfFileName);
+
+        return ResponseEntity.ok("Success");
+    }
+ }

@@ -196,7 +196,60 @@ public class ProductService {
         } catch (NullPointerException e) {
             e.getMessage();
         }
+    }
 
+    /*
+     * author: emhaki
+     * date: 2023.10.10
+     * description: Csv 데이터 delete
+     * */
+    public void deleteCsvData(@RequestParam("search_product_id") String searchProductId,
+                            @RequestParam("kindOfFileName") String kindOfFileName) throws Exception {
+
+        List<String[]> csvData = readCsv(kindOfFileName);
+        // 검색한 search_product_id에 해당하는 열 삭제
+        if (kindOfFileName.equals("product")) {
+            csvData.removeIf(row -> row[0].equals(searchProductId));
+        } else if (kindOfFileName.equals("rec")) {
+            csvData.removeIf(row -> row.length > 1 && row[1].equals(searchProductId));
+        }
+
+        writeCsv(csvData , kindOfFileName);
+    }
+
+    public List<String[]> readCsv(String kindOfFileName) throws Exception {
+        List<String[]> csvData = new ArrayList<>();
+        CSVReader csvReader = null;
+        try {
+            if (kindOfFileName.equals("product")) {
+                csvReader = new CSVReader(new FileReader(productFilePath));
+            } else if (kindOfFileName.equals("rec")) {
+                csvReader = new CSVReader(new FileReader(recFilePath));
+            }
+            String[] row;
+            while ((row = csvReader.readNext()) != null) {
+                csvData.add(row);
+            }
+        } catch (NullPointerException e) {
+            e.getMessage();
+        }
+        return csvData;
+    }
+
+    public void writeCsv(List<String[]> csvData, String kindOfFileName) throws Exception {
+        if (kindOfFileName.equals("product")) {
+            try (CSVWriter csvWriter = new CSVWriter(new FileWriter(productFilePath))) {
+                for (String[] row : csvData) {
+                    csvWriter.writeNext(row);
+                }
+            }
+        } else if (kindOfFileName.equals("rec")) {
+            try (CSVWriter csvWriter = new CSVWriter(new FileWriter(recFilePath))) {
+                for (String[] row : csvData) {
+                    csvWriter.writeNext(row);
+                }
+            }
+        }
     }
 }
 
