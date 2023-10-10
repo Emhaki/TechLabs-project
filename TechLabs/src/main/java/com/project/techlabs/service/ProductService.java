@@ -1,30 +1,40 @@
 package com.project.techlabs.service;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import com.project.techlabs.dto.ProductDTO;
 import com.project.techlabs.dto.ProductData;
 import com.project.techlabs.dto.ProductResultDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
 @Service
-public class CsvReaderService {
+public class ProductService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CsvReaderService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+    private static final String productFilePath = "/Users/emhaki/Desktop/product.csv";
+    private static final String recFilePath = "/Users/emhaki/Desktop/rec.csv";
 
-    // productIds 값을 여러개 받을 수 있도록 Optional로 처리
+    private String productWriterCheck = null;
+    private String recWriterCheck = null;
+    /*
+     * author: emhaki
+     * date: 2023.10.06
+     * description: Csv 데이터 read
+     * */
     public ProductData readCsvByProductId(String productIds) throws IOException {
         ProductData productData = new ProductData();
         List<ProductDTO> targetList = new ArrayList<>();
         List<ProductResultDTO> resultList = new ArrayList<>();
-        String productFilePath = "/Users/emhaki/Desktop/product.csv";
-        String recFilePath = "/Users/emhaki/Desktop/rec.csv";
+
 
         // 1. while문으로 recFilePath 엑셀을 쭉 돌면서 recId값과 productIds값이 일치하는 것을 DTO에 담기
         String recLine;
@@ -81,7 +91,6 @@ public class CsvReaderService {
 
                 }
             }
-
             productData.setResults(resultList);
         } catch (IOException e) {
             logger.error("CSV-file Reading Error" + e.getMessage());
@@ -89,4 +98,59 @@ public class CsvReaderService {
 
         return productData;
     }
+    /*
+    * author: emhaki
+    * date: 2023.10.08
+    * description: Csv 데이터 insert
+    * */
+    public void insertCsvData (@RequestParam Map<String, Object> paramMap) throws Exception {
+
+        try {
+
+            CSVWriter productCsvWriter = new CSVWriter(new FileWriter(productFilePath, true));
+            CSVWriter recCsvWriter = new CSVWriter(new FileWriter(recFilePath, true));
+
+            // product csv 파일의 행 == 6
+            if (paramMap.size() > 5) {
+                String[] productRow = {
+                        (String) paramMap.get("item_id"),
+                        (String) paramMap.get("item_name"),
+                        (String) paramMap.get("item_image"),
+                        (String) paramMap.get("item_url"),
+                        (String) paramMap.get("original_price"),
+                        (String) paramMap.get("sale_price")
+                };
+                // 처음 데이터 삽입시
+                if (productWriterCheck == null) {
+                    String[] productSpace = {" "};
+                    productCsvWriter.writeNext(productSpace);
+                    productCsvWriter.writeNext(productRow);
+                    productWriterCheck = "check";
+                } else {
+                    productCsvWriter.writeNext(productRow);
+                }
+                productCsvWriter.close();
+            } else if (paramMap.size() <= 4) {
+                // 바로 다음행에 이어져서 써짐
+                String[] recRow = {
+                        (String) paramMap.get("relation_id"),
+                        (String) paramMap.get("item_id"),
+                        (String) paramMap.get("score"),
+                        (String) paramMap.get("rank")
+                };
+                if (recWriterCheck == null) {
+                    String[] recSpace = {" "};
+                    recCsvWriter.writeNext(recSpace);
+                    recCsvWriter.writeNext(recRow);
+                    recWriterCheck = "check";
+                } else {
+                    recCsvWriter.writeNext(recRow);
+                }
+                recCsvWriter.close();
+            }
+        } catch (NullPointerException e) {
+            e.getMessage();
+        }
+    }
 }
+
