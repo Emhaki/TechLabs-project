@@ -25,7 +25,7 @@ public class ProductService {
     /*
      * author: emhaki
      * date: 2023.10.06
-     * description: Csv 데이터 read
+     * description: parameter로 요청 온 product_id값으로 csv파일 탐색
      * */
     public ProductData readCsvByProductId(String productIds) throws IOException {
 
@@ -93,7 +93,6 @@ public class ProductService {
             if (paramMap.size() == 6) {
                 String kindOfFileName = "product";
                 List<String[]> csvData = readCsv(kindOfFileName);
-                // 검색한 search_product_id에 해당하는 열 삭제
 
                 String[] productRow = {
                         (String) paramMap.get("item_id"),
@@ -176,7 +175,7 @@ public class ProductService {
     /*
      * author: emhaki
      * date: 2023.10.10
-     * description: Csv 데이터 리스트 삽입 후 값 반환
+     * description: Csv 파일 데이터를 리스트에 저장
      * */
     public List<String[]> readCsv(String kindOfFileName) throws Exception {
         List<String[]> csvData = new ArrayList<>();
@@ -203,7 +202,7 @@ public class ProductService {
     /*
      * author: emhaki
      * date: 2023.10.10
-     * description: Csv 데이터 delete
+     * description: Csv 데이터 update
      * */
     public List<String[]> updateCsv(@RequestParam Map<String, Object> paramMap, String kindOfFileName) throws Exception {
         List<String[]> csvData = new ArrayList<>();
@@ -247,7 +246,7 @@ public class ProductService {
     /*
      * author: emhaki
      * date: 2023.10.10
-     * description: Parameter 넘어온 csvData 엑셀 작성
+     * description: Parameter로 넘어온 csvData 엑셀 작성
      * */
     public void insertCsv(List<String[]> csvData, String kindOfFileName) throws Exception {
         try {
