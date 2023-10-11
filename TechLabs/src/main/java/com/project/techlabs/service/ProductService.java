@@ -32,9 +32,7 @@ public class ProductService {
      * */
     public ProductData readCsvByProductId(String productIds) throws IOException {
         ProductData productData = new ProductData();
-        List<ProductDTO> targetList = new ArrayList<>();
         List<ProductResultDTO> resultList = new ArrayList<>();
-
 
         // 1. while문으로 recFilePath 엑셀을 쭉 돌면서 recId값과 productIds값이 일치하는 것을 DTO에 담기
         String recLine;
@@ -54,7 +52,7 @@ public class ProductService {
                 if (recId.equals(productId)) {
 
                     ProductResultDTO productResultDTO = new ProductResultDTO();
-                    // 엑셀 다시 읽도록 리셋
+                    //  다시 읽도록 리셋
                     productBr = new BufferedReader(new FileReader(productFilePath));
                     while ((productLine = productBr.readLine()) != null) {
                         productValues = productLine.split(",");
@@ -106,7 +104,6 @@ public class ProductService {
     public void insertCsvData (@RequestParam Map<String, Object> paramMap) throws Exception {
 
         try {
-
             CSVWriter productCsvWriter = new CSVWriter(new FileWriter(productFilePath, true));
             CSVWriter recCsvWriter = new CSVWriter(new FileWriter(recFilePath, true));
 
@@ -160,39 +157,15 @@ public class ProductService {
     public void updateCsvData(@RequestParam Map<String, Object> paramMap) throws Exception {
 
         try {
-            CSVReader productCsvReader = new CSVReader(new FileReader(recFilePath));
-            CSVReader recCsvReader = new CSVReader(new FileReader(recFilePath));
-
             if (paramMap.size() == 7) {
-                BufferedReader productBr = new BufferedReader(new FileReader(productFilePath));
-                String[] productValues = null;
-                String productLine;
+                String kindOfFileName = "product";
+                updateCsv(paramMap, kindOfFileName);
 
-                while ((productLine = productBr.readLine()) != null) {
-                    productValues = productLine.split(",");
-                    String productId = productValues[0].replaceAll("^\"|\"$", "");
-
-                    if (productId.equals((String) paramMap.get("search_product_id"))) {
-                        // pramMap size 7 -> 6으로 변경하기
-                        paramMap.remove("search_product_id");
-                        insertCsvData(paramMap);
-                    }
-                }
             } else if (paramMap.size() == 5) {
-                    BufferedReader recBr = new BufferedReader(new FileReader(recFilePath));
-                    String[] recValues = null;
-                    String recLine;
-
-                    while ((recLine = recBr.readLine()) != null) {
-                        recValues = recLine.split(",");
-                        //  target: 두번째 열
-                        String recId = recValues[1].replaceAll("^\"|\"$", "");
-                        if (recId.equals((String) paramMap.get("search_product_id"))) {
-                            paramMap.remove("search_product_id");
-                            insertCsvData(paramMap);
-                    }
+                    String kindOfFileName = "rec";
+                    updateCsv(paramMap, kindOfFileName);
                 }
-            }
+
         } catch (NullPointerException e) {
             e.getMessage();
         }
@@ -208,15 +181,24 @@ public class ProductService {
 
         List<String[]> csvData = readCsv(kindOfFileName);
         // 검색한 search_product_id에 해당하는 열 삭제
-        if (kindOfFileName.equals("product")) {
-            csvData.removeIf(row -> row[0].equals(searchProductId));
-        } else if (kindOfFileName.equals("rec")) {
-            csvData.removeIf(row -> row.length > 1 && row[1].equals(searchProductId));
-        }
+        try {
+            if (kindOfFileName.equals("product")) {
+                csvData.removeIf(row -> row[0].equals(searchProductId));
+            } else if (kindOfFileName.equals("rec")) {
+                csvData.removeIf(row -> row.length > 1 && row[1].equals(searchProductId));
+            }
 
-        writeCsv(csvData , kindOfFileName);
+            writeCsv(csvData , kindOfFileName);
+        } catch (NullPointerException e) {
+            e.getMessage();
+        }
     }
 
+    /*
+     * author: emhaki
+     * date: 2023.10.10
+     * description: Csv 데이터 리스트 삽입 후 값 반환
+     * */
     public List<String[]> readCsv(String kindOfFileName) throws Exception {
         List<String[]> csvData = new ArrayList<>();
         CSVReader csvReader = null;
@@ -230,12 +212,68 @@ public class ProductService {
             while ((row = csvReader.readNext()) != null) {
                 csvData.add(row);
             }
+
         } catch (NullPointerException e) {
             e.getMessage();
         }
         return csvData;
     }
 
+    /*
+     * author: emhaki
+     * date: 2023.10.10
+     * description: Csv 데이터 delete
+     * */
+    public List<String[]> updateCsv(@RequestParam Map<String, Object> paramMap, String kindOfFileName) throws Exception {
+        List<String[]> csvData = new ArrayList<>();
+        CSVReader csvReader = null;
+        String[] row;
+        try{
+
+        if (kindOfFileName.equals("product")) {
+            csvReader = new CSVReader(new FileReader(productFilePath));
+
+            while ((row = csvReader.readNext()) != null) {
+                if (paramMap.get("search_product_id").equals(row[0])) {
+                    row[0] = (String) paramMap.get("item_id");
+                    row[1] = (String) paramMap.get("item_name");
+                    row[2] = (String) paramMap.get("item_image");
+                    row[3] = (String) paramMap.get("item_url");
+                    row[4] = (String) paramMap.get("original_price");
+                    row[5] = (String) paramMap.get("sale_price");
+                    System.out.println(Arrays.toString(row) + "여기보세요");
+                }
+                csvData.add(row);
+            }
+        } else if (kindOfFileName.equals("rec")) {
+            csvReader = new CSVReader(new FileReader(recFilePath));
+
+            while ((row = csvReader.readNext()) != null) {
+                System.out.println(Arrays.toString(row));
+                // rec 파일의 고유 item_id = 두번째 열
+                if (paramMap.get("search_product_id").equals(row[1])) {
+                    row[0] = (String) paramMap.get("rec_id");
+                    row[1] = (String) paramMap.get("item_id");
+                    row[2] = (String) paramMap.get("score");
+                    row[3] = (String) paramMap.get("rank");
+                }
+                csvData.add(row);
+            }
+        }
+            writeCsv(csvData, kindOfFileName);
+        } catch (NullPointerException e) {
+            e.getMessage();
+        }
+        return csvData;
+    }
+
+
+
+    /*
+     * author: emhaki
+     * date: 2023.10.10
+     * description: Parameter 넘어온 csvData 엑셀 작성
+     * */
     public void writeCsv(List<String[]> csvData, String kindOfFileName) throws Exception {
         if (kindOfFileName.equals("product")) {
             try (CSVWriter csvWriter = new CSVWriter(new FileWriter(productFilePath))) {
