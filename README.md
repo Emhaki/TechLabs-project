@@ -48,7 +48,7 @@
 <img src="TechLabs/img/InsertData(rec.csv).png" alt="InsertData(rec.csv)" width="300">
 <img src="TechLabs/img/InsertCsv(rec.csv).png" alt="InsertCsv(rec.csv)" width="150" height="300">
 
-   ```
+   ```java
    1. rec/inset 앤드포인트로 Post요청을 보내면 요청의 parameter에 담긴 값들이 엑셀에 Insert 되게끔 구현했습니다.
    2. 이미지와 같이 삽입할 데이터의 item_id, item_name, item_image, item_url, original_price, sale_price를 입력합니다.
    ```
@@ -76,14 +76,18 @@
   1. 데이터를 삭제하기 위해선 rec/delete 앤드포인트로 Post요청을 보내야 합니다. 
   2. kind_of_file_name에 값에 따라 탐색하는 엑셀이 구분되며, search_product_id값을 탐색하여 일치하는 값의 데이터를 삭제합니다.
  ```
+---
 ### 개발 중 고려한 사항 및 확인 시 참고할 사항
 * item_id는 고유한 id값이라고 가정하고 1번과 2번 코드를 구현했습니다.
 * 2번 기능의 경우 관리자가 사용하는 기능이라고 가정하고 구현했습니다.
 * 2번 기능의 경우 Insert, Update는 단 건 요청에 한 개의 데이터가 삽입되며 Delete에 경우에는 한 번 요청의 해당되는 값 여러개가 삭제됩니다.
 * 탐색하는 csv파일의 경로는 local 경로로 지정하였습니다.
 
+----
 ### 과제 소감
-* 1번을 구현하면서 사전 설계의 중요성을 깨달았습니다. product.csv, rec.csv 데이터를 결합하는 방법에 대한 설계가 제대로 이루어지지 않은 상황에서 코드를 작성하다보니 코드를 수정하는 일이 잦았으며, 실제로도 많은 시간이 소요되었습니다.
-*  opencsv 라이브러리를 사용하여 CSVReader, CSVWriter로 csv파일을 조작했습니다. CSVReader를 이용해 데이터를 List에 담아서 Insert, Update, Delete 기능을 구현하면 조금 더 깔끔하게 데이터를 다룰 수 있음을 알게 됐습니다.
-* 컴포넌트를 분리하여 효율적으로 코드를 사용하고자 노력했습니다. 다른 일정들로 인해 과제에 많은 시간을 할애하지 못해 아쉬웠으며, 하드코딩된 부분들에 대한 부분들도 아쉬움이 남습니다.
-* 주니어 개발자인 저에게 과제를 할 수 있는 기회를 주셔서 감사드립니다.
+```
+- 1번을 구현하면서 사전 설계의 중요성을 깨달았습니다. product.csv, rec.csv 데이터를 결합하는 방법에 대한 설계가 제대로 이루어지지 않은 상황에서 코드를 작성하다보니 코드를 수정하는 일이 잦았으며, 실제로도 많은 시간이 소요되었습니다.
+- opencsv 라이브러리를 사용하여 CSVReader, CSVWriter로 csv파일을 조작했습니다. CSVReader를 이용해 데이터를 List에 담아서 Insert, Update, Delete 기능을 구현하면 조금 더 깔끔하게 데이터를 다룰 수 있음을 알게 됐습니다.
+- 컴포넌트를 분리하여 효율적으로 코드를 사용하고자 노력했습니다. 다른 일정들로 인해 과제에 많은 시간을 할애하지 못해 아쉬웠으며, 하드코딩된 부분들에 대한 부분들도 아쉬움이 남습니다.
+- 주니어 개발자인 저에게 과제를 할 수 있는 기회를 주셔서 감사드립니다.
+```
