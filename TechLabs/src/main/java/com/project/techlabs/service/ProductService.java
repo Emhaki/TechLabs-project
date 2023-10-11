@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -29,69 +28,59 @@ public class ProductService {
      * description: Csv 데이터 read
      * */
     public ProductData readCsvByProductId(String productIds) throws IOException {
+
         ProductData productData = new ProductData();
+        ProductDTO productDto = new ProductDTO();
+        ProductResultDTO productResultDTO = new ProductResultDTO();
         List<ProductResultDTO> resultList = new ArrayList<>();
 
-        // 1. while문으로 recFilePath 엑셀을 쭉 돌면서 recId값과 productIds값이 일치하는 것을 DTO에 담기
-        String recLine;
-        String productLine;
-        String productId = productIds.replaceAll("^\"|\"$", "");
-
         try {
-            BufferedReader recBr = new BufferedReader(new FileReader(recFilePath));
-            BufferedReader productBr = new BufferedReader(new FileReader(productFilePath));
-            String[] productValues = null;
-            String[] recValues = null;
+            List<String[]> productList = readCsv("product");
+            List<String[]> recList = readCsv("rec");
+            for (String[] productArray : productList) {
+                /*System.out.println(Arrays.toString(productArray));*/
+                if (productArray[0].replaceAll("^\"|\"$", "").equals(productIds)) {
 
-            while ((recLine = recBr.readLine()) != null) {
-                recValues = recLine.split(",");
+                    productDto.setItem_id(productArray[0]);
+                    productDto.setItem_name(productArray[1]);
+                    productDto.setItem_image(productArray[2]);
+                    productDto.setItem_url(productArray[3]);
+                    productDto.setOriginal_price(productArray[4]);
+                    productDto.setSale_price(productArray[5]);
+                    productData.setTarget(productDto);
+                }
+            }
 
-                String recId = recValues[0].replaceAll("^\"|\"$", "");
-                if (recId.equals(productId)) {
+            List<String[]> recValues = new ArrayList<>();
+            for (String[] recArray : recList) {
+                if (recArray[0].replaceAll("^\"|\"$", "").equals(productIds)) {
+                    recValues.add((recArray));
+                }
+            }
 
-                    ProductResultDTO productResultDTO = new ProductResultDTO();
-                    //  다시 읽도록 리셋
-                    productBr = new BufferedReader(new FileReader(productFilePath));
-                    while ((productLine = productBr.readLine()) != null) {
-                        productValues = productLine.split(",");
-                        if (recValues[1].replaceAll("^\"|\"$", "").equals(productValues[0].replaceAll("^\"|\"$", ""))) {
-                            productResultDTO.setItem_id(recValues[1]);
-                            productResultDTO.setItem_name(productValues[1]);
-                            productResultDTO.setItem_image(productValues[2]);
-                            productResultDTO.setItem_url(productValues[3]);
-                            productResultDTO.setOriginal_price(productValues[4]);
-                            productResultDTO.setSale_price(productValues[5]);
-                            productResultDTO.setScore(recValues[2]);
-                            productResultDTO.setRank(recValues[3]);
-                            resultList.add(productResultDTO);
-                        }
-                    }
-                    productBr = new BufferedReader(new FileReader(productFilePath));
-                    try {
-                        while ((productLine = productBr.readLine()) != null) {
-                            productValues = productLine.split(",");
-                            if (productId.contains(productValues[0].replaceAll("^\"|\"$", ""))) {
-                                ProductDTO productDto = new ProductDTO();
-                                productDto.setItem_id(productValues[0]);
-                                productDto.setItem_name(productValues[1]);
-                                productDto.setItem_image(productValues[2]);
-                                productDto.setItem_url(productValues[3]);
-                                productDto.setOriginal_price(productValues[4]);
-                                productDto.setSale_price(productValues[5]);
-                                productData.setTarget(productDto);
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        logger.error("Invalid number");
+            for (String[] recData : recValues) {
+                for (String[] productArray : productList) {
+                    if (recData[1].replaceAll("^\"|\"$", "").equals(productArray[0].replaceAll("^\"|\"$", ""))) {
+                        productResultDTO = new ProductResultDTO();
+                        productResultDTO.setItem_id(recData[1]);
+                        productResultDTO.setItem_name(productArray[1]);
+                        productResultDTO.setItem_image(productArray[2]);
+                        productResultDTO.setItem_url(productArray[3]);
+                        productResultDTO.setOriginal_price(productArray[4]);
+                        productResultDTO.setSale_price(productArray[5]);
+                        productResultDTO.setScore(recData[2]);
+                        productResultDTO.setRank(recData[3]);
+                        resultList.add(productResultDTO);
                     }
                 }
             }
             productData.setResults(resultList);
-        } catch (IOException e) {
-            logger.error("CSV-file Reading Error" + e.getMessage());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
         }
         return productData;
     }
+
     /*
     * author: emhaki
     * date: 2023.10.08
