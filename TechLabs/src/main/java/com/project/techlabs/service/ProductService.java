@@ -38,7 +38,7 @@ public class ProductService {
             List<String[]> productList = readCsv("product");
             List<String[]> recList = readCsv("rec");
             for (String[] productArray : productList) {
-                /*System.out.println(Arrays.toString(productArray));*/
+
                 if (productArray[0].replaceAll("^\"|\"$", "").equals(productIds)) {
 
                     productDto.setItem_id(productArray[0]);
