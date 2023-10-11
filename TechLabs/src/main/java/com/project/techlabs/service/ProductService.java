@@ -23,8 +23,6 @@ public class ProductService {
     private static final String productFilePath = "/Users/emhaki/Desktop/product.csv";
     private static final String recFilePath = "/Users/emhaki/Desktop/rec.csv";
 
-    private String productWriterCheck = null;
-    private String recWriterCheck = null;
     /*
      * author: emhaki
      * date: 2023.10.06
@@ -86,14 +84,12 @@ public class ProductService {
                     } catch (NumberFormatException e) {
                         logger.error("Invalid number");
                     }
-
                 }
             }
             productData.setResults(resultList);
         } catch (IOException e) {
             logger.error("CSV-file Reading Error" + e.getMessage());
         }
-
         return productData;
     }
     /*
@@ -104,11 +100,12 @@ public class ProductService {
     public void insertCsvData (@RequestParam Map<String, Object> paramMap) throws Exception {
 
         try {
-            CSVWriter productCsvWriter = new CSVWriter(new FileWriter(productFilePath, true));
-            CSVWriter recCsvWriter = new CSVWriter(new FileWriter(recFilePath, true));
-
             // product csv 파일의 행 == 6
             if (paramMap.size() == 6) {
+                String kindOfFileName = "product";
+                List<String[]> csvData = readCsv(kindOfFileName);
+                // 검색한 search_product_id에 해당하는 열 삭제
+
                 String[] productRow = {
                         (String) paramMap.get("item_id"),
                         (String) paramMap.get("item_name"),
@@ -117,36 +114,25 @@ public class ProductService {
                         (String) paramMap.get("original_price"),
                         (String) paramMap.get("sale_price")
                 };
-                // 처음 데이터 삽입시
-                if (productWriterCheck == null) {
-                    String[] productSpace = {" "};
-                    productCsvWriter.writeNext(productSpace);
-                    productCsvWriter.writeNext(productRow);
-                    productWriterCheck = "check";
-                } else {
-                    productCsvWriter.writeNext(productRow);
-                }
-                productCsvWriter.close();
+                csvData.add(productRow);
+                insertCsv(csvData, kindOfFileName);
             } else if (paramMap.size() == 4) {
-                // 바로 다음행에 이어져서 써짐
+                String kindOfFileName = "rec";
+                List<String[]> csvData = readCsv(kindOfFileName);
+
                 String[] recRow = {
-                        (String) paramMap.get("relation_id"),
+                        (String) paramMap.get("rec_id"),
                         (String) paramMap.get("item_id"),
                         (String) paramMap.get("score"),
                         (String) paramMap.get("rank")
                 };
-                if (recWriterCheck == null) {
-                    String[] recSpace = {" "};
-                    recCsvWriter.writeNext(recSpace);
-                    recCsvWriter.writeNext(recRow);
-                    recWriterCheck = "check";
-                } else {
-                    recCsvWriter.writeNext(recRow);
-                }
-                recCsvWriter.close();
+                csvData.add(recRow);
+                insertCsv(csvData, kindOfFileName);
+            } else {
+                throw new IllegalArgumentException("Invalid paramMap size. Expected 6 or 4, but got: " + paramMap.size());
             }
         } catch (NullPointerException e) {
-            e.getMessage();
+            logger.error("NullPointerException: " + e.getMessage());
         }
     }
     /*
@@ -164,10 +150,12 @@ public class ProductService {
             } else if (paramMap.size() == 5) {
                     String kindOfFileName = "rec";
                     updateCsv(paramMap, kindOfFileName);
-                }
+            } else {
+                throw new IllegalArgumentException("Invalid paramMap size. Expected 7 or 5, but got: " + paramMap.size());
+            }
 
         } catch (NullPointerException e) {
-            e.getMessage();
+            logger.error(e.getMessage());
         }
     }
 
@@ -186,11 +174,13 @@ public class ProductService {
                 csvData.removeIf(row -> row[0].equals(searchProductId));
             } else if (kindOfFileName.equals("rec")) {
                 csvData.removeIf(row -> row.length > 1 && row[1].equals(searchProductId));
+            } else {
+                throw new IllegalArgumentException("Invalid FileName: " + kindOfFileName);
             }
 
-            writeCsv(csvData , kindOfFileName);
+            insertCsv(csvData , kindOfFileName);
         } catch (NullPointerException e) {
-            e.getMessage();
+            logger.error(e.getMessage());
         }
     }
 
@@ -207,14 +197,16 @@ public class ProductService {
                 csvReader = new CSVReader(new FileReader(productFilePath));
             } else if (kindOfFileName.equals("rec")) {
                 csvReader = new CSVReader(new FileReader(recFilePath));
+            } else {
+                throw new IllegalArgumentException("Invalid FileName: " + kindOfFileName);
             }
+
             String[] row;
             while ((row = csvReader.readNext()) != null) {
                 csvData.add(row);
             }
-
-        } catch (NullPointerException e) {
-            e.getMessage();
+        } catch (IOException e) {
+            logger.error(e.getMessage());
         }
         return csvData;
     }
@@ -228,30 +220,24 @@ public class ProductService {
         List<String[]> csvData = new ArrayList<>();
         CSVReader csvReader = null;
         String[] row;
-        try{
-
-        if (kindOfFileName.equals("product")) {
-            csvReader = new CSVReader(new FileReader(productFilePath));
+        try {
+            if (kindOfFileName.equals("product")) {
+                csvReader = new CSVReader(new FileReader(productFilePath));
+            } else if (kindOfFileName.equals("rec")) {
+                csvReader = new CSVReader(new FileReader(recFilePath));
+            } else {
+                throw new IllegalArgumentException("Invalid FileName: " + kindOfFileName);
+            }
 
             while ((row = csvReader.readNext()) != null) {
-                if (paramMap.get("search_product_id").equals(row[0])) {
+                if (paramMap.get("search_product_id").equals(row[0]) && kindOfFileName.equals("product")) {
                     row[0] = (String) paramMap.get("item_id");
                     row[1] = (String) paramMap.get("item_name");
                     row[2] = (String) paramMap.get("item_image");
                     row[3] = (String) paramMap.get("item_url");
                     row[4] = (String) paramMap.get("original_price");
                     row[5] = (String) paramMap.get("sale_price");
-                    System.out.println(Arrays.toString(row) + "여기보세요");
-                }
-                csvData.add(row);
-            }
-        } else if (kindOfFileName.equals("rec")) {
-            csvReader = new CSVReader(new FileReader(recFilePath));
-
-            while ((row = csvReader.readNext()) != null) {
-                System.out.println(Arrays.toString(row));
-                // rec 파일의 고유 item_id = 두번째 열
-                if (paramMap.get("search_product_id").equals(row[1])) {
+                } else if (paramMap.get("search_product_id").equals(row[1]) && kindOfFileName.equals("rec")) {
                     row[0] = (String) paramMap.get("rec_id");
                     row[1] = (String) paramMap.get("item_id");
                     row[2] = (String) paramMap.get("score");
@@ -259,10 +245,10 @@ public class ProductService {
                 }
                 csvData.add(row);
             }
-        }
-            writeCsv(csvData, kindOfFileName);
-        } catch (NullPointerException e) {
-            e.getMessage();
+
+            insertCsv(csvData, kindOfFileName);
+        } catch (IOException e) {
+            logger.error(e.getMessage());
         }
         return csvData;
     }
@@ -274,19 +260,25 @@ public class ProductService {
      * date: 2023.10.10
      * description: Parameter 넘어온 csvData 엑셀 작성
      * */
-    public void writeCsv(List<String[]> csvData, String kindOfFileName) throws Exception {
-        if (kindOfFileName.equals("product")) {
-            try (CSVWriter csvWriter = new CSVWriter(new FileWriter(productFilePath))) {
-                for (String[] row : csvData) {
-                    csvWriter.writeNext(row);
+    public void insertCsv(List<String[]> csvData, String kindOfFileName) throws Exception {
+        try {
+            if (kindOfFileName.equals("product")) {
+                try (CSVWriter csvWriter = new CSVWriter(new FileWriter(productFilePath))) {
+                    for (String[] row : csvData) {
+                        csvWriter.writeNext(row);
+                    }
                 }
-            }
-        } else if (kindOfFileName.equals("rec")) {
-            try (CSVWriter csvWriter = new CSVWriter(new FileWriter(recFilePath))) {
-                for (String[] row : csvData) {
-                    csvWriter.writeNext(row);
+            } else if (kindOfFileName.equals("rec")) {
+                try (CSVWriter csvWriter = new CSVWriter(new FileWriter(recFilePath))) {
+                    for (String[] row : csvData) {
+                        csvWriter.writeNext(row);
+                    }
                 }
+            } else {
+                throw new IllegalArgumentException("Invalid FileName: " + kindOfFileName);
             }
+        } catch (IOException e) {
+            logger.error(e.getMessage());
         }
     }
 }
