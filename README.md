@@ -24,7 +24,7 @@
   <img src="TechLabs/img/상품정보 및 연관 상품 조회.png" alt="상품정보 및 연관 상품 조회" width="300">   
   <img src="TechLabs/img/JSON.png" alt="JSON" width="300">
 
-```
+```java
 1. Get 요청방식으로 구현했고, Parameter에 입력한 id값을 기준으로 csv파일을 탐색하도록 코드를 작성했습니다.
 2. 2개 이상의 상품을 볼 경우 콤마로 구분되며, 반복문을 통해 각각의 id값을 탐색합니다.
 3. 컴포넌트로 구현한 readCsv함수를 통해 각 엑셀 데이터를 저장합니다.
